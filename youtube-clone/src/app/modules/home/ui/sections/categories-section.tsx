@@ -29,7 +29,7 @@ const CategoriesSectionSuspense = ({categoryId} :CategoriesSectionProps) =>{
 
     return(
         <div>
-            <FilterCarousel value={categoryId} data={categories}/>
+            <FilterCarousel value={categoryId} data={data}/>
         </div>
     )
 }
