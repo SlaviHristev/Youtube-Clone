@@ -10,6 +10,7 @@ const Page = async () =>{
         <HydrateClient>
             <StudioView/>
         </HydrateClient>
+        
     )
 }
 

@@ -11,8 +11,13 @@ export const useIntersectionObserver = (options: IntersectionObserverInit) => {
     }, options )
 
     if(targetRef.current){
-        
+        observer.observe(targetRef.current)
     }
 
-  }, []);
+    return() => observer.disconnect();
+
+  }, [options]);
+
+
+  return{targetRef, isIntersecting}
 };
