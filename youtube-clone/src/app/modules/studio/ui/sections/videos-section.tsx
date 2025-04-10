@@ -1,5 +1,6 @@
 "use client";
 
+import { VideoThumbnail } from "@/app/modules/videos/ui/components/video-thumbnail";
 import { InfiniteScroll } from "@/components/infinite-scroll";
 import {
   Table,
@@ -53,9 +54,19 @@ const VideosSectionSuspense = () => {
             {videos.pages
               .flatMap((page) => page.items)
               .map((video) => (
-                <Link href={`/studio/videos/${video.id}`} key={video.id} legacyBehavior>
+                <Link
+                  href={`/studio/videos/${video.id}`}
+                  key={video.id}
+                  legacyBehavior
+                >
                   <TableRow className="cursor-pointer">
-                    <TableCell>{video.title}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-4">
+                        <div className="relative aspect-video w-36 shrink-0">
+                          <VideoThumbnail imageUrl={video.thumbnailUrl}/>
+                        </div>
+                      </div>
+                    </TableCell>
                     <TableCell>visibilty</TableCell>
                     <TableCell>status</TableCell>
                     <TableCell>date</TableCell>
