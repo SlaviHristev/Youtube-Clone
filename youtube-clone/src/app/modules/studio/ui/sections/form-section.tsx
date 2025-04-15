@@ -32,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 interface FormSectionProps {
   videoId: string;
@@ -52,15 +53,28 @@ const FormSectionSkeleton = () => {
 };
 
 const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
+  const utils = trpc.useUtils();
   const [video] = trpc.studio.getOne.useSuspenseQuery({ id: videoId });
+  const [categories] = trpc.categories.getmany.useSuspenseQuery();
+
+  const update = trpc.videos.update.useMutation({
+    onSuccess: () => {
+      utils.studio.getMany.invalidate();
+      utils.studio.getOne.invalidate({ id: videoId });
+      toast.success("Video updated")
+    },
+    onError: () =>{
+      toast.error("Something went wrong")
+    }
+  });
 
   const form = useForm<z.infer<typeof videoUpdateSchema>>({
     resolver: zodResolver(videoUpdateSchema),
     defaultValues: video,
   });
 
-  const onSubmit = async (data: z.infer<typeof videoUpdateSchema>) => {
-    console.log(data);
+  const onSubmit = (data: z.infer<typeof videoUpdateSchema>) => {
+    update.mutate(data);
   };
 
   return (
@@ -101,7 +115,7 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
                 <FormItem>
                   <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input {...field}  placeholder="Add a title to your video"/>
+                    <Input {...field} placeholder="Add a title to your video" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -114,8 +128,42 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea {...field} value={field.value ?? ""} rows={10} className="resize-none pr-10" placeholder="Add a description to your video"/>
+                    <Textarea
+                      {...field}
+                      value={field.value ?? ""}
+                      rows={10}
+                      className="resize-none pr-10"
+                      placeholder="Add a description to your video"
+                    />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="categoryId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value ?? undefined}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
