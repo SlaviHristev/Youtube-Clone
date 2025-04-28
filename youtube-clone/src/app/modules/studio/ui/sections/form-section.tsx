@@ -2,7 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { z } from "zod";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/router";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +23,6 @@ import {
 } from "lucide-react";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useForm } from "react-hook-form";
 import { videoUpdateSchema } from "@/db/schema";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,7 +41,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
 import { VideoPlayer } from "@/app/modules/videos/ui/components/video-player";
 import Link from "next/link";
 import { snakeCaseToTitle } from "@/lib/utils";
@@ -63,6 +64,7 @@ const FormSectionSkeleton = () => {
 };
 
 const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
+  const router = useRouter();
   const utils = trpc.useUtils();
   const [video] = trpc.studio.getOne.useSuspenseQuery({ id: videoId });
   const [categories] = trpc.categories.getmany.useSuspenseQuery();
@@ -72,6 +74,17 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
       utils.studio.getMany.invalidate();
       utils.studio.getOne.invalidate({ id: videoId });
       toast.success("Video updated");
+    },
+    onError: () => {
+      toast.error("Something went wrong");
+    },
+  });
+
+  const remove = trpc.videos.remove.useMutation({
+    onSuccess: () => {
+      utils.studio.getMany.invalidate();
+      toast.success("Video removed");
+      router.push("/studio")
     },
     onError: () => {
       toast.error("Something went wrong");
@@ -122,7 +135,7 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => remove.mutate({id: videoId})}>
                   <TrashIcon className="size-4 mr-2" />
                   Delete
                 </DropdownMenuItem>
