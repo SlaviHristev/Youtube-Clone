@@ -5,7 +5,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +44,8 @@ import {
 import { VideoPlayer } from "@/app/modules/videos/ui/components/video-player";
 import Link from "next/link";
 import { snakeCaseToTitle } from "@/lib/utils";
+import Image from "next/image";
+import { THUMBNAIL_FALLBACK } from "@/app/modules/videos/constants";
 
 interface FormSectionProps {
   videoId: string;
@@ -84,7 +86,7 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
     onSuccess: () => {
       utils.studio.getMany.invalidate();
       toast.success("Video removed");
-      router.push("/studio")
+      router.push("/studio");
     },
     onError: () => {
       toast.error("Something went wrong");
@@ -135,7 +137,9 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => remove.mutate({id: videoId})}>
+                <DropdownMenuItem
+                  onClick={() => remove.mutate({ id: videoId })}
+                >
                   <TrashIcon className="size-4 mr-2" />
                   Delete
                 </DropdownMenuItem>
@@ -177,7 +181,39 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
                 </FormItem>
               )}
             />
+            <FormField
+              name="thumbnailUrl"
+              control={form.control}
+              render={() => (
+                <FormItem>
+                  <FormLabel>Thumbnail</FormLabel>
+                  <FormControl>
+                    <div className="p-0.5 border border-dashed border-neutral-400 relative h-[84px] w-[153px] group">
+                      <Image
+                        fill
+                        alt="Thumbnail"
+                        src={video.thumbnailUrl || THUMBNAIL_FALLBACK}
+                        className="object-cover"
+                      />
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            type="button"
+                            size="icon"
+                            className="bg-black/50 hover:bg-black/50 absolute top-1 right-1 rounded-full opacity-100 md:opacity-0 group-hover:opacity-100 duration-300 size-7"
+                          >
+                            <MoreVerticalIcon className="text-white" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" side="right">
 
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="categoryId"
@@ -281,13 +317,13 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
                     <SelectContent>
                       <SelectItem value="public">
                         <div className="flex items-center">
-                          <Globe2Icon className="size-4 mr-2"/>
+                          <Globe2Icon className="size-4 mr-2" />
                           Public
                         </div>
                       </SelectItem>
                       <SelectItem value="private">
                         <div className="flex items-center">
-                          <LockIcon  className="size-4 mr-2" />
+                          <LockIcon className="size-4 mr-2" />
                           Private
                         </div>
                       </SelectItem>
