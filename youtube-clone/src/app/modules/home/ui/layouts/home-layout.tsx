@@ -19,7 +19,6 @@ interface HomeLayoutProps{
                     </main>
                 </div>
             </div>
-            {children}
         </SidebarProvider>
     )
 }
