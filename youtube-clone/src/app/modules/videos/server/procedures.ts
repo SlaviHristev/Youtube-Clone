@@ -24,10 +24,27 @@ export const videosRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const { clerkUserId } = ctx;
       let userId;
-      const [user] = await db.select().from(users).where(inArray(users.clerkId, clerkUserId ? [clerkUserId] : []));
-      
-      const viewerReactions = db.$with("viewer_reactions").as();
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(inArray(users.clerkId, clerkUserId ? [clerkUserId] : []));
+
+      if (user) {
+        userId = user.id;
+      }
+
+      const viewerReactions = db.$with("viewer_reactions").as(
+        db
+          .select({
+            videoId: videoReactions.videoId,
+            type: videoReactions.type,
+          })
+          .from(videoReactions)
+          .where(inArray(videoReactions.userId, userId ? [userId] : []))
+      );
+
       const [existingVideo] = await db
+        .with(viewerReactions)
         .select({
           ...getTableColumns(videos),
           user: {
@@ -48,10 +65,13 @@ export const videosRouter = createTRPCRouter({
               eq(videoReactions.type, "dislike")
             )
           ),
+          viewerReaction: viewerReactions.type,
         })
         .from(videos)
         .innerJoin(users, eq(videos.userId, users.id))
-        .where(eq(videos.id, input.id));
+        .leftJoin(viewerReactions, eq(viewerReactions.videoId, videos.id))
+        .where(eq(videos.id, input.id))
+        .groupBy(videos.id, users.id, viewerReactions.type);
 
       if (!existingVideo) {
         throw new TRPCError({ code: "NOT_FOUND" });
